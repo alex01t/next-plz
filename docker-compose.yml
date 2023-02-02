@@ -1,10 +1,26 @@
 version: "3"
 services:
+  client:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command:
+      - bash
+      - -c
+      - |
+        # (seq 1000 | parallel -j10 -- curl -s balancer/{}) &
+        while :; do
+          sleep 1
+          curl -HX-Balancer-Api-Token:7EssrJVoZK3T8L -s balancer:8420/next
+          curl -HX-Balancer-Api-Token:7EssrJVoZK3T8L -s balancer:8420/status
+        done
   balancer:
     build:
       context: ./
       dockerfile: Dockerfile
     ports:
       - 80:80
+      - 8420:8420  # balancer api
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./balancer-api-access.lua:/etc/nginx/balancer-api-access.lua
